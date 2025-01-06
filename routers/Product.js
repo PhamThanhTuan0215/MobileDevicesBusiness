@@ -5,6 +5,10 @@ const Controller = require('../controllers/Product')
 
 Router.get('/', Controller.get_all_products);
 
+Router.get('/search', Controller.search_by_name);
+
+Router.get('/filter', Controller.filter_products);
+
 Router.get('/:id', Controller.get_product);
 
 Router.get('/details/:id', Controller.get_details_product);

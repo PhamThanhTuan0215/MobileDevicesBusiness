@@ -280,6 +280,7 @@ module.exports.delete_product = async (req, res) => {
         const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/products/' + product.url_image.split('/products/')[1].split('.')[0] // Lưu lại public_id cũ
 
         await Product.findByIdAndDelete(id);
+        await DetailsProduct.findOneAndDelete({productId: id})
         await cloudinary.uploader.destroy(cloudinaryPublicId_old);
 
         res.status(200).json({ code: 0, message: 'Product deleted successfully' });
@@ -287,3 +288,47 @@ module.exports.delete_product = async (req, res) => {
         res.status(500).json({ code: 2, message: 'Error deleting product', error: error.message });
     }
 };
+
+module.exports.search_by_name = async (req, res) => {
+
+    const { name } = req.query;
+
+    if (!name) {
+        return res.status(400).json({ code: 1, message: 'Name query parameter is required' });
+    }
+
+    try {    
+        const products = await Product.find({
+            name: { $regex: name, $options: 'i' } //không phân biệt hoa thường
+        });
+
+        if (!products) {
+            return res.status(404).json({ code: 1, message: 'Products not found' });
+        }
+        res.status(200).json({ code: 0, message: 'Products found', data: products });
+    } catch (error) {
+        res.status(500).json({ code: 2, message: 'Error fetching products by name', error: error.message });
+    }
+}
+
+module.exports.filter_products = async (req, res) => {
+
+    const { brand } = req.query;
+
+    if (!brand) {
+        return res.status(400).json({ code: 1, message: 'Brand query parameter is required' });
+    }
+
+    try {    
+        const products = await Product.find({
+            brand: { $regex: `^${brand}$`, $options: 'i' }
+        });
+
+        if (!products) {
+            return res.status(404).json({ code: 1, message: 'Products not found' });
+        }
+        res.status(200).json({ code: 0, message: 'Products found', data: products });
+    } catch (error) {
+        res.status(500).json({ code: 2, message: 'Error fetching products by filter', error: error.message });
+    }
+}

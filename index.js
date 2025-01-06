@@ -16,6 +16,10 @@ app.get("/", (req, res) => {
 
 app.use("/products", require("./routers/Product"))
 
+app.use("/wishlist", require("./routers/Wishlist"))
+
+app.use("/cart", require("./routers/Cart"))
+
 app.use((req, res) => {
     res.json({ code: 2, message: "Path is not supported" });
 });
