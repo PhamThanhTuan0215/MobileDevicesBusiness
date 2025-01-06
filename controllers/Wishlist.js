@@ -1,11 +1,11 @@
 const Product = require('../models/Product')
-const ProductInWishlist = require('../models/ProductInWishlist')
+const Wishlist = require('../models/Wishlist')
 
 module.exports.get_wishlist = async (req, res) => {
     const { customerId } = req.params;
 
     try {
-        const wishlistItems = await ProductInWishlist.find({ customerId }).select('productId');
+        const wishlistItems = await Wishlist.find({ customerId }).select('productId');
 
         if (!wishlistItems || wishlistItems.length === 0) {
             return res.status(200).json({ code: 0, message: 'Wishlist is empty', data: [] });
@@ -30,13 +30,13 @@ module.exports.add_product_to_wishlist = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Product not found' });
         }
 
-        const existingItem = await ProductInWishlist.findOne({ customerId, productId });
+        const existingItem = await Wishlist.findOne({ customerId, productId });
         if (existingItem) {
             return res.status(400).json({ code: 1, message: 'Product already in wishlist' });
         }
 
-        const newProductInWishlist = new ProductInWishlist({ customerId, productId });
-        await newProductInWishlist.save();
+        const newWishlist = new Wishlist({ customerId, productId });
+        await newWishlist.save();
 
         res.status(201).json({ code: 0, message: 'Product added to wishlist successfully', data: product });
     } catch (error) {
@@ -53,7 +53,7 @@ module.exports.remove_product_from_wishlist = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Product not found' });
         }
 
-        const deletedItem = await ProductInWishlist.findOneAndDelete({ customerId, productId });
+        const deletedItem = await Wishlist.findOneAndDelete({ customerId, productId });
         if (!deletedItem) {
             return res.status(404).json({ code: 1, message: 'Product not found in wishlist' });
         }
