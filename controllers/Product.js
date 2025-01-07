@@ -264,6 +264,15 @@ module.exports.edit_product = async (req, res) => {
             await cloudinary.uploader.destroy(cloudinaryPublicId_new);
         }
 
+        if (error.code === 11000) {
+            const duplicateField = Object.keys(error.keyValue)[0];
+            return res.status(400).json({
+                code: 1,
+                message: `${duplicateField} must be unique`,
+                error: error.message
+            });
+        }
+
         res.status(500).json({ code: 2, message: 'Error updating product and details', error: error.message });
     }
 };
