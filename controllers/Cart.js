@@ -5,9 +5,9 @@ module.exports.get_cart = async (req, res) => {
     const { customerId } = req.params;
 
     try {
-        const carts = await Cart.find({customerId})
+        const carts = await Cart.find({ customerId })
 
-        if(!carts || carts.length === 0) {
+        if (!carts || carts.length === 0) {
             return res.status(200).json({ code: 0, message: 'Cart is empty', data: [] });
         }
 
@@ -54,10 +54,10 @@ module.exports.add_product_to_cart = async (req, res) => {
 }
 
 module.exports.remove_product_from_cart = async (req, res) => {
-    const { customerId, productId } = req.params;
+    const { id } = req.params;
 
     try {
-        const cartItem = await Cart.findOne({ customerId, productId });
+        const cartItem = await Cart.findById(id);
         if (!cartItem) {
             return res.status(404).json({ code: 1, message: 'Product not found in cart' });
         }
@@ -66,11 +66,10 @@ module.exports.remove_product_from_cart = async (req, res) => {
             cartItem.quantity -= 1;
             await cartItem.save();
             res.status(200).json({ code: 0, message: 'Product quantity decreased in cart', data: cartItem });
-        } else {
+        }
+        else {
             await Cart.deleteOne({ _id: cartItem._id });
-            res.status(200).json({
-                code: 0, message: 'Product removed from cart successfully'
-            });
+            res.status(200).json({ code: 0, message: 'Product removed from cart successfully' });
         }
     }
     catch (error) {

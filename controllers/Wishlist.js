@@ -58,11 +58,7 @@ module.exports.remove_product_from_wishlist = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Product not found in wishlist' });
         }
 
-        res.status(200).json({
-            code: 0,
-            message: 'Product removed from wishlist successfully',
-            data: product
-        });
+        res.status(200).json({ code: 0, message: 'Product removed from wishlist successfully', data: product });
 
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error removing product from wishlist', error: error.message });

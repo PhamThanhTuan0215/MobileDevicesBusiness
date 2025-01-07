@@ -20,6 +20,8 @@ app.use("/wishlist", require("./routers/Wishlist"))
 
 app.use("/cart", require("./routers/Cart"))
 
+app.use("/review", require("./routers/Review"))
+
 app.use((req, res) => {
     res.json({ code: 2, message: "Path is not supported" });
 });
