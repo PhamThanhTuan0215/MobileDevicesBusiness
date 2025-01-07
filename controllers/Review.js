@@ -23,11 +23,11 @@ module.exports.write_review = async (req, res) => {
     const { rating, comment } = req.body
 
     if (!rating || !comment) {
-        return res.status(400).json({ code: 1, message: 'Rating and comment are required.' });
+        return res.status(400).json({ code: 1, message: 'Rating and comment are required.' })
     }
 
     try {
-        const purchasedProduct = await PurchasedProduct.findOne({ customerId, productId });
+        const purchasedProduct = await PurchasedProduct.findOne({ customerId, productId }).sort({ date_purchased: -1 });
         if (!purchasedProduct) {
             return res.status(403).json({ code: 1, message: 'You have not purchased this product.' });
         }

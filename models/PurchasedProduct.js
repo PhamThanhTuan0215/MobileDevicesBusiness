@@ -14,6 +14,18 @@ const purchasedProductSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Order'
     },
+    productName: {
+        type: String,
+        require: true
+    },
+    quantity: {
+        type: Number,
+        require: true
+    },
+    totalPrice: {
+        type: Number,
+        require: true
+    },
     date_purchased: {
         type: Date,
         default: Date.now
