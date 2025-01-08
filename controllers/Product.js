@@ -143,7 +143,7 @@ module.exports.add_product = async (req, res) => {
         session.endSession();
 
         if (cloudinaryPublicId) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId);
+            cloudinary.uploader.destroy(cloudinaryPublicId);
         }
 
         if (error.code === 11000) {
@@ -196,7 +196,7 @@ module.exports.edit_product = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Product not found' });
         }
 
-        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/products/' + product.url_image.split('/products/')[1].split('.')[0] // Lưu lại public_id cũ
+        const cloudinaryPublicId_old = extractFolderFromURL(product.url_image) + product.url_image.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
 
         if (file) {
 
@@ -251,7 +251,7 @@ module.exports.edit_product = async (req, res) => {
         session.endSession();
 
         if (file) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+            cloudinary.uploader.destroy(cloudinaryPublicId_old);
         }
 
         res.status(200).json({ code: 0, message: 'Product and details updated successfully', data: { product: updatedProduct, details: detailsProduct } });
@@ -261,7 +261,7 @@ module.exports.edit_product = async (req, res) => {
         session.endSession();
 
         if (cloudinaryPublicId_new) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_new);
+            cloudinary.uploader.destroy(cloudinaryPublicId_new);
         }
 
         if (error.code === 11000) {
@@ -286,11 +286,11 @@ module.exports.delete_product = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Product not found' });
         }
 
-        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/products/' + product.url_image.split('/products/')[1].split('.')[0] // Lưu lại public_id cũ
+        const cloudinaryPublicId_old = extractFolderFromURL(product.url_image) + product.url_image.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
 
         await Product.findByIdAndDelete(id);
         await DetailsProduct.findOneAndDelete({productId: id})
-        await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        cloudinary.uploader.destroy(cloudinaryPublicId_old);
 
         res.status(200).json({ code: 0, message: 'Product deleted successfully' });
     } catch (error) {
@@ -340,4 +340,27 @@ module.exports.filter_products = async (req, res) => {
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error fetching products by filter', error: error.message });
     }
+}
+
+function extractFolderFromURL(url) {
+    // Tách phần sau "upload/" (nếu có)
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return ''; // Không tìm thấy "/upload/", trả về chuỗi rỗng
+
+    // Lấy phần sau "/upload/"
+    const path = url.substring(uploadIndex + 8);
+
+    // Loại bỏ tiền tố "v[digits]/" nếu có
+    const cleanedPath = path.replace(/^v\d+\//, '');
+
+    // Tìm vị trí của dấu "/" cuối cùng
+    const lastSlashIndex = cleanedPath.lastIndexOf('/');
+
+    // Trích xuất toàn bộ path (không có tiền tố "v[digits]/")
+    if (lastSlashIndex !== -1) {
+        return cleanedPath.substring(0, lastSlashIndex + 1);
+    }
+
+    // Nếu không có thư mục
+    return ''; // Trả về chuỗi rỗng
 }

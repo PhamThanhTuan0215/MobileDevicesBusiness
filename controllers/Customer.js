@@ -151,7 +151,7 @@ module.exports.updateCustomerById = async (req, res) => {
         session.endSession();
 
         if (file) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+            cloudinary.uploader.destroy(cloudinaryPublicId_old);
         }
 
         res.status(200).json({code: 0, message: 'Customer updated successfully', data: customer});
@@ -161,7 +161,7 @@ module.exports.updateCustomerById = async (req, res) => {
         session.endSession();
 
         if (cloudinaryPublicId_new) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_new);
+            cloudinary.uploader.destroy(cloudinaryPublicId_new);
         }
 
         res.status(500).json({code: 2, message: 'Error updating customer', error: error.message});
@@ -176,7 +176,7 @@ module.exports.deleteCustomerByID = async (req, res) => {
             return res.status(404).json({code: 1, message: 'Customer not found'});
         }
 
-        await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        cloudinary.uploader.destroy(cloudinaryPublicId_old);
 
         res.status(200).json({code: 0, message: 'Customer deleted successfully', data: customer});
     } catch (error) {

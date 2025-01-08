@@ -153,7 +153,7 @@ module.exports.updateManagerById = async (req, res) => {
         session.endSession();
 
         if (file) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+            cloudinary.uploader.destroy(cloudinaryPublicId_old);
         }
 
         res.status(200).json({code: 0, message: 'Manager updated successfully', data: manager});
@@ -163,7 +163,7 @@ module.exports.updateManagerById = async (req, res) => {
         session.endSession();
 
         if (cloudinaryPublicId_new) {
-            await cloudinary.uploader.destroy(cloudinaryPublicId_new);
+            cloudinary.uploader.destroy(cloudinaryPublicId_new);
         }
 
         res.status(500).json({code: 2, message: 'Error updating manager', error: error.message});
@@ -179,7 +179,7 @@ module.exports.deleteManagerByID = async (req, res) => {
             return res.status(404).json({code: 1, message: 'Manager not found'});
         }
 
-        await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        cloudinary.uploader.destroy(cloudinaryPublicId_old);
         
         res.status(200).json({code: 0, message: 'Manager deleted successfully', data: manager});
     } catch (error) {
