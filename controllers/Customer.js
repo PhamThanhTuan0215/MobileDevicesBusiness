@@ -119,7 +119,7 @@ module.exports.updateCustomerById = async (req, res) => {
             return res.status(404).json({code: 1, message: 'Customer not found'});
         }
 
-        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/accounts/' + customer.url_avatar.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
+        const cloudinaryPublicId_old = extractFolderFromURL(customer.url_avatar) + customer.url_avatar.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
         
         if (file) {
 
@@ -171,7 +171,7 @@ module.exports.updateCustomerById = async (req, res) => {
 module.exports.deleteCustomerByID = async (req, res) => {
     try {
         const customer = await Customer.findByIdAndDelete(req.params.id);
-        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/accounts/' + customer.url_avatar.split('/').pop().split('.')[0];
+        const cloudinaryPublicId_old = extractFolderFromURL(customer.url_avatar) + customer.url_avatar.split('/').pop().split('.')[0];
         if (!customer) {
             return res.status(404).json({code: 1, message: 'Customer not found'});
         }
@@ -251,4 +251,28 @@ module.exports.changePassword = async (req, res) => {
     } catch (error) {
         res.status(500).json({code: 2, message: 'Error changing password', error: error.message});
     }
+}
+
+
+function extractFolderFromURL(url) {
+    // Tách phần sau "upload/" (nếu có)
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return ''; // Không tìm thấy "/upload/", trả về chuỗi rỗng
+
+    // Lấy phần sau "/upload/"
+    const path = url.substring(uploadIndex + 8);
+
+    // Loại bỏ tiền tố "v[digits]/" nếu có
+    const cleanedPath = path.replace(/^v\d+\//, '');
+
+    // Tìm vị trí của dấu "/" cuối cùng
+    const lastSlashIndex = cleanedPath.lastIndexOf('/');
+
+    // Trích xuất toàn bộ path (không có tiền tố "v[digits]/")
+    if (lastSlashIndex !== -1) {
+        return cleanedPath.substring(0, lastSlashIndex + 1);
+    }
+
+    // Nếu không có thư mục
+    return ''; // Trả về chuỗi rỗng
 }
