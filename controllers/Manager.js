@@ -120,7 +120,7 @@ module.exports.updateManagerById = async (req, res) => {
             return res.status(404).json({code: 1, message: 'Manager not found'});
         }
 
-        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/accounts/' + manager.url_avatar.split('accounts/')[1].split('.')[0] // Lưu lại public_id cũ
+        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/accounts/' + manager.url_avatar.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
         
         if (file) {
 
@@ -173,9 +173,14 @@ module.exports.updateManagerById = async (req, res) => {
 module.exports.deleteManagerByID = async (req, res) => {
     try {
         const manager = await Manager.findByIdAndDelete(req.params.id);
+        const cloudinaryPublicId_old = 'MobileDevicesBusinessApplication/accounts/' + manager.url_avatar.split('/').pop().split('.')[0];
+
         if (!manager) {
             return res.status(404).json({code: 1, message: 'Manager not found'});
         }
+
+        await cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        
         res.status(200).json({code: 0, message: 'Manager deleted successfully', data: manager});
     } catch (error) {
         res.status(500).json({code: 2, message: 'Error deleting manager', error: error.message});

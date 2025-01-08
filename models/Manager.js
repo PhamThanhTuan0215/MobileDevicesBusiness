@@ -9,7 +9,10 @@ const managerSchema = new Schema({
     },
     address: String,
     phone: String,
-    url_avatar: String,
+    url_avatar: {
+        type: String,
+        default: 'https://res.cloudinary.com/dyacy1md1/image/upload/v1736261578/default-avatar-icon-of-social-media-user-vector_qse49g.jpg'
+    },
     password: String,
     status: {
         type: String,
