@@ -32,6 +32,10 @@ module.exports.write_review = async (req, res) => {
             return res.status(403).json({ code: 1, message: 'You have not purchased this product.' });
         }
 
+        if (!purchasedProduct.isOrderCompleted) {
+            return res.status(403).json({ code: 1, message: 'You have not completed the product purchasing process.' });
+        }
+
         const now = new Date();
         const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
         if (purchasedProduct.date_purchased < thirtyDaysAgo) {

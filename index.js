@@ -16,15 +16,19 @@ app.get("/", (req, res) => {
 
 app.use("/products", require("./routers/Product"))
 
-app.use("/wishlist", require("./routers/Wishlist"))
+app.use("/wishlists", require("./routers/Wishlist"))
 
-app.use("/cart", require("./routers/Cart"))
+app.use("/carts", require("./routers/Cart"))
 
-app.use("/review", require("./routers/Review"))
+app.use("/orders", require("./routers/Order"))
 
-app.use("/customer", require("./routers/Customer"))
+app.use("/reviews", require("./routers/Review"))
 
-app.use("/manager", require("./routers/Manager"))
+app.use("/reports", require("./routers/Report"))
+
+app.use("/customers", require("./routers/Customer"))
+
+app.use("/managers", require("./routers/Manager"))
 
 app.use((req, res) => {
     res.json({ code: 2, message: "Path is not supported" });

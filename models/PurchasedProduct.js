@@ -14,6 +14,10 @@ const purchasedProductSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'Order'
     },
+    isOrderCompleted: {
+        type: Boolean,
+        default: false
+    },
     productName: {
         type: String,
         require: true

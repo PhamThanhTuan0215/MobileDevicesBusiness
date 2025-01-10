@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema
 
-const cartSchema = new Schema({
-    customerId: {
+const detailsOrderSchema = new Schema({
+    orderId: {
         type: Schema.Types.ObjectId,
-        ref: 'Customer'
+        ref: 'Order'
     },
     productId: {
         type: Schema.Types.ObjectId,
@@ -20,16 +20,17 @@ const cartSchema = new Schema({
     },
     quantity: {
         type: Number,
-        default: 1
+        required: true
     },
     totalPrice: {
         type: Number
     }
 })
 
-cartSchema.pre('save', function(next) {
-    this.totalPrice = this.price * this.quantity;  // Tính lại totalPrice mỗi khi lưu
+detailsOrderSchema.pre('save', function (next) {
+    this.totalPrice = this.price * this.quantity;
+
     next();
 });
 
-module.exports = mongoose.model('Cart', cartSchema)
+module.exports = mongoose.model('detailsOrder', detailsOrderSchema)
