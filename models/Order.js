@@ -45,7 +45,7 @@ const orderSchema = new Schema({
     status: {
         type: String,
         default: 'processing',
-        enum: ['processing', 'delivering', 'delivered']
+        enum: ['processing', 'delivering', 'delivered', 'cancel']
     },
     isPaid: {
         type: Boolean,

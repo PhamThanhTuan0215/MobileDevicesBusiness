@@ -3,6 +3,7 @@ const DetailsOrder = require('../models/DetailsOrder')
 const Cart = require('../models/Cart')
 const PurchasedProduct = require('../models/PurchasedProduct')
 const Customer = require('../models/Customer')
+const Product = require('../models/Product')
 
 module.exports.add_order = async (req, res) => {
     const { customerId } = req.params;
@@ -40,6 +41,23 @@ module.exports.add_order = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Customer not found.' });
         }
 
+        const cartItems = await Cart.find({ customerId }).populate('productId', 'amount name');
+
+        // cartItems.productId lúc này lưu thông tin về product(amount, name) chứ ko còn là productId nữa
+
+        if (!cartItems || cartItems.length === 0) {
+            return res.status(400).json({ code: 1, message: 'Cart is empty. Cannot create order details and purchased products.' });
+        }
+
+        // Kiểm tra tồn kho
+        for (const cartItem of cartItems) {
+            const product = cartItem.productId;
+
+            if (product.amount < cartItem.quantity) {
+                return res.status(400).json({ code: 1, message: `Not enough stock for product ${product.name}. Only ${product.amount} available.` });
+            }
+        }
+
         const newOrder = new Order({
             customerId,
             customerName: customer.name,
@@ -52,12 +70,6 @@ module.exports.add_order = async (req, res) => {
             isPaid
         });
 
-        const cartItems = await Cart.find({ customerId });
-
-        if (!cartItems || cartItems.length === 0) {
-            return res.status(400).json({ code: 1, message: 'Cart is empty. Cannot create order details and purchased products.' });
-        }
-
         // Tạo Order
         await newOrder.save();
 
@@ -65,7 +77,7 @@ module.exports.add_order = async (req, res) => {
             // Tạo DetailsOrder
             const detailsOrder = new DetailsOrder({
                 orderId: newOrder._id,
-                productId: cartItem.productId,
+                productId: cartItem.productId._id,
                 productName: cartItem.productName,
                 price: cartItem.price,
                 quantity: cartItem.quantity
@@ -76,7 +88,7 @@ module.exports.add_order = async (req, res) => {
             // Tạo PurchasedProduct
             const purchasedProduct = new PurchasedProduct({
                 customerId,
-                productId: cartItem.productId,
+                productId: cartItem.productId._id,
                 orderId: newOrder._id,
                 productName: cartItem.productName,
                 quantity: cartItem.quantity,
@@ -84,6 +96,13 @@ module.exports.add_order = async (req, res) => {
             });
 
             await purchasedProduct.save();
+
+            // Cập nhật tồn kho
+            const product = await Product.findById(cartItem.productId._id);
+            if (product) {
+                product.amount -= cartItem.quantity;
+                await product.save();
+            }
         });
 
         await Promise.all(operations);
@@ -99,8 +118,31 @@ module.exports.add_order = async (req, res) => {
 }
 
 module.exports.get_all_order = async (req, res) => {
+
+    const { startDate, endDate } = req.query;
+
     try {
-        const orders = await Order.find().sort({ isCompleted: 1, creation_date: -1 });
+        let filter = {};
+
+        if (startDate && endDate) {
+            // yyyy-mm-dd
+            const isValidStartDate = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
+            const isValidEndDate = /^\d{4}-\d{2}-\d{2}$/.test(endDate);
+
+            if (!isValidStartDate || !isValidEndDate) {
+                return res.status(400).json({ code: 1, message: 'Invalid date format. Please use yyyy-mm-dd.' });
+            }
+
+            const selectedStartDate = new Date(startDate);
+            const selectedEndDate = new Date(endDate);
+
+            filter.creation_date = {
+                $gte: new Date(selectedStartDate.setHours(0, 0, 0, 0)), // Bắt đầu từ 00:00:00
+                $lte: new Date(selectedEndDate.setHours(23, 59, 59, 999)) // Kết thúc trước 23:59:59
+            };
+        }
+
+        const orders = await Order.find(filter).sort({ isCompleted: 1, creation_date: -1 });
 
         if (!orders || orders.length === 0) {
             return res.status(404).json({ code: 1, message: 'No orders found.' });
@@ -126,7 +168,7 @@ module.exports.get_order = async (req, res) => {
         if (!order) {
             return res.status(404).json({ code: 1, message: 'Order not found' });
         }
-        
+
         res.status(200).json({ code: 0, message: 'Order retrieved successfully', data: order });
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error retrieving order', error: error.message });
@@ -155,14 +197,35 @@ module.exports.get_details_order = async (req, res) => {
 module.exports.get_my_orders = async (req, res) => {
     const { customerId } = req.params;
 
+    const { startDate, endDate } = req.query;
+
     if (!customerId) {
         return res.status(400).json({ code: 1, message: "Customer ID is required." });
     }
 
-    console.log(customerId)
-
     try {
-        const orders = await Order.find({ customerId }).sort({ isCompleted: 1, creation_date: -1 });
+
+        let filter = { customerId };
+
+        if (startDate && endDate) {
+            // yyyy-mm-dd
+            const isValidStartDate = /^\d{4}-\d{2}-\d{2}$/.test(startDate);
+            const isValidEndDate = /^\d{4}-\d{2}-\d{2}$/.test(endDate);
+
+            if (!isValidStartDate || !isValidEndDate) {
+                return res.status(400).json({ code: 1, message: 'Invalid date format. Please use yyyy-mm-dd.' });
+            }
+
+            const selectedStartDate = new Date(startDate);
+            const selectedEndDate = new Date(endDate);
+
+            filter.creation_date = {
+                $gte: new Date(selectedStartDate.setHours(0, 0, 0, 0)), // Bắt đầu từ 00:00:00
+                $lte: new Date(selectedEndDate.setHours(23, 59, 59, 999)) // Kết thúc trước 23:59:59
+            };
+        }
+
+        const orders = await Order.find(filter).sort({ isCompleted: 1, creation_date: -1 });
         if (!orders || orders.length === 0) {
             return res.status(404).json({ code: 1, message: 'No orders found' });
         }
@@ -175,7 +238,7 @@ module.exports.get_my_orders = async (req, res) => {
 
 module.exports.change_status_order = async (req, res) => {
     const { id } = req.params;
-    const {status, isPaid} = req.body
+    const { status, isPaid } = req.body
 
     const errors = [];
 
@@ -223,7 +286,7 @@ module.exports.change_status_order = async (req, res) => {
     }
 }
 
-module.exports.delete_order = async (req, res) => {
+module.exports.cancel_order = async (req, res) => {
     const { id } = req.params;
 
     if (!id) {
@@ -241,11 +304,24 @@ module.exports.delete_order = async (req, res) => {
             return res.status(400).json({ code: 1, message: "Can not cancel a completed order." });
         }
 
-        await DetailsOrder.deleteMany({ orderId: order._id });
+        order.status = 'cancel';
+        await order.save();
+
+        const purchasedProducts = await PurchasedProduct.find({ orderId: order._id });
+
+        // Cập nhật tồn kho (tăng lại)
+        const updateStockOperations = purchasedProducts.map(async (purchasedProduct) => {
+            const product = await Product.findById(purchasedProduct.productId);
+
+            if (product) {
+                product.amount += purchasedProduct.quantity;
+                await product.save();
+            }
+        });
+
+        await Promise.all(updateStockOperations);
 
         await PurchasedProduct.deleteMany({ orderId: order._id });
-
-        await Order.findByIdAndDelete(id);
 
         return res.status(200).json({ code: 0, message: "Order cancelled successfully.", data: order });
 

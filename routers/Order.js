@@ -15,6 +15,6 @@ Router.post('/add/:customerId', Controller.add_order);
 
 Router.put('/change-status-order/:id', Controller.change_status_order);
 
-Router.delete('/cancel/:id', Controller.delete_order);
+Router.delete('/cancel/:id', Controller.cancel_order);
 
 module.exports = Router
