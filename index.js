@@ -30,6 +30,8 @@ app.use("/customers", require("./routers/Customer"))
 
 app.use("/managers", require("./routers/Manager"))
 
+app.use("/discounts", require("./routers/Discount"))
+
 app.use((req, res) => {
     res.json({ code: 2, message: "Path is not supported" });
 });
