@@ -18,4 +18,6 @@ Router.post('/login', Controller.upload , Controller.login)
 
 Router.patch('/changePassword/:id', Controller.upload , Controller.changePassword)
 
+Router.post('/forgotPassword', Controller.forgotPassword)
+
 module.exports = Router

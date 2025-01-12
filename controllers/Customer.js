@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const Customer = require('../models/Customer');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const sendMail = require("../configs/sendMail.js")
+
 require("dotenv").config();
 const {JWT_SECRET} = process.env
 
@@ -254,6 +256,25 @@ module.exports.changePassword = async (req, res) => {
     }
 }
 
+module.exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+    let newPassword = generateRandomString(6)
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    try {
+        const customer = await Customer.findOneAndUpdate({ email }, { password: hashedPassword }, { new: true });
+        if (!customer) {
+            return res.status(404).json({code: 1, message: 'Customer not found'});
+        }
+
+        sendMail(email, newPassword);
+        res.status(200).json({code: 0, message: 'New password sent to email'});
+    } catch (error) {
+        res.status(500).json({code: 2, message: 'Error changing password', error: error.message});
+    }
+}
+
 
 function extractFolderFromURL(url) {
     // Tách phần sau "upload/" (nếu có)
@@ -276,4 +297,14 @@ function extractFolderFromURL(url) {
 
     // Nếu không có thư mục
     return ''; // Trả về chuỗi rỗng
+}
+
+function generateRandomString(length) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
 }
