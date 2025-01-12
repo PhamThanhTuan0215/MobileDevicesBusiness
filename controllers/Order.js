@@ -304,7 +304,7 @@ module.exports.cancel_order = async (req, res) => {
             return res.status(400).json({ code: 1, message: "Can not cancel a completed order." });
         }
 
-        order.status = 'cancel';
+        order.status = 'canceled';
         await order.save();
 
         const purchasedProducts = await PurchasedProduct.find({ orderId: order._id });

@@ -10,7 +10,7 @@ Router.get('/', authenticateToken(['manager', 'admin']), Controller.getAllCustom
 
 Router.get('/:id', Controller.getCustomerById)
 
-Router.patch('/:id', authenticateToken(['customer']), Controller.upload , Controller.updateCustomerById)
+Router.patch('/:id', authenticateToken(['customer', 'admin', 'manager']), Controller.upload , Controller.updateCustomerById)
 
 Router.delete('/:id', authenticateToken(['manager', 'admin']), Controller.deleteCustomerByID)
 

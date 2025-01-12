@@ -82,7 +82,7 @@ module.exports.VNPayReturn = async (req, res, next) => {
             if (code === "00") {
                 let orderId = vnp_Params["vnp_TxnRef"];
                 await Order.findByIdAndUpdate(orderId, {
-                    method: "VnPay",
+                    method: "vnpay",
                     isPaid: true
                 });
                 return res.status(200).json({
