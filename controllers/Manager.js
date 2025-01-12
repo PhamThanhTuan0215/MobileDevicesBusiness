@@ -215,8 +215,8 @@ module.exports.login = async (req, res) => {
         const payload = {
             manager: {
                 id: manager.id,
-                role: manager.role
-            }
+            },
+            role: manager.role
         };
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {

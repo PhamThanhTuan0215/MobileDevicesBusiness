@@ -1,17 +1,18 @@
 const express = require('express')
 const Router = express.Router()
+const authenticateToken = require('../middlewares/authenticateToken');
 
 const Controller = require('../controllers/Customer')
 
 Router.post('/', Controller.addNewCustomer)
 
-Router.get('/', Controller.getAllCustomer)
+Router.get('/', authenticateToken(['manager', 'admin']), Controller.getAllCustomer)
 
 Router.get('/:id', Controller.getCustomerById)
 
-Router.patch('/:id', Controller.upload , Controller.updateCustomerById)
+Router.patch('/:id', authenticateToken(['customer']), Controller.upload , Controller.updateCustomerById)
 
-Router.delete('/:id', Controller.deleteCustomerByID)
+Router.delete('/:id', authenticateToken(['manager', 'admin']), Controller.deleteCustomerByID)
 
 Router.post('/login', Controller.upload , Controller.login)
 

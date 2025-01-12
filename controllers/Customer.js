@@ -211,8 +211,9 @@ module.exports.login = async (req, res) => {
 
         const payload = {
             customer: {
-                id: customer.id
-            }
+                id: customer.id,
+            },
+            role: 'customer'
         };
 
         jwt.sign(payload, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {

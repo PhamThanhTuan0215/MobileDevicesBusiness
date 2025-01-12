@@ -2,16 +2,17 @@ const express = require('express')
 const Router = express.Router()
 
 const Controller = require('../controllers/Discount')
+const authenticateToken = require('../middlewares/authenticateToken');
 
-Router.get('/', Controller.getAllDiscounts)
+Router.get('/', authenticateToken(['admin']), Controller.getAllDiscounts)
 
-Router.post('/', Controller.addNewDiscount)
+Router.post('/', authenticateToken(['admin']), Controller.addNewDiscount)
 
-Router.get('/:id', Controller.getDiscountById)
+Router.get('/:id', authenticateToken(['admin']), Controller.getDiscountById)
 
-Router.patch('/:id', Controller.updateDiscountById)
+Router.patch('/:id', authenticateToken(['admin']), Controller.updateDiscountById)
 
-Router.delete('/:id', Controller.deleteDiscountByID)
+Router.delete('/:id', authenticateToken(['admin']), Controller.deleteDiscountByID)
 
 Router.post('/apply', Controller.applyDiscount)
 

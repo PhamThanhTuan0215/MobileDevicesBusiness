@@ -1,5 +1,6 @@
 const express = require('express')
 const Router = express.Router()
+const authenticateToken = require('../middlewares/authenticateToken');
 
 const Controller = require('../controllers/Manager')
 
@@ -7,17 +8,15 @@ Router.post('/', Controller.upload, function (req, res) {
     Controller.addNewManager
 })
 
-Router.get('/', Controller.getAllManager)
+Router.get('/', authenticateToken(['admin']), Controller.getAllManager)
 
-Router.get('/:id', Controller.getManagerById)
+Router.get('/:id', authenticateToken(['admin']), Controller.getManagerById)
 
-Router.patch('/:id', Controller.upload , Controller.updateManagerById)
+Router.patch('/:id', authenticateToken(['admin', 'manager']), Controller.upload , Controller.updateManagerById)
 
-Router.delete('/:id', Controller.deleteManagerByID)
+Router.delete('/:id', authenticateToken(['admin']), Controller.deleteManagerByID)
 
-Router.post('/login', Controller.upload , function (req, res){
-    Controller.login
-})
+Router.post('/login', Controller.upload , Controller.login)
 
 Router.patch('/changePassword/:id', Controller.upload , Controller.changePassword)
 
