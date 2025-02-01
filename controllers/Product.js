@@ -23,6 +23,18 @@ module.exports.get_all_products = async (req, res) => {
     }
 };
 
+module.exports.get_products_for_customer = async (req, res) => {
+    try {
+        const products = await Product.find().select('-import_price');
+        if (!products) {
+            return res.status(404).json({ code: 1, message: 'Products not found' });
+        }
+        res.status(200).json({ code: 0, message: 'Products found', data: products });
+    } catch (error) {
+        res.status(500).json({ code: 2, message: 'Error fetching all products', error: error.message });
+    }
+};
+
 module.exports.get_product = async (req, res) => {
     const { id } = req.params;
 
