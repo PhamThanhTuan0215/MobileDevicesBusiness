@@ -16,7 +16,7 @@ const authenticateToken = (requiredRoles) => {
             if (err) {
                 return res.status(403).json({
                     success: false,
-                    message: 'Invalid token.'
+                    message: 'Token is invalid or expired.'
                 });
             }
 
