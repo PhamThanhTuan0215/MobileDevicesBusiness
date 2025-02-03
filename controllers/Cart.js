@@ -6,12 +6,27 @@ module.exports.get_cart = async (req, res) => {
 
     try {
         const carts = await Cart.find({ customerId })
+            .populate({
+                path: "productId",
+                select: "name url_image"
+            });
 
         if (!carts || carts.length === 0) {
             return res.status(200).json({ code: 0, message: 'Cart is empty', data: [] });
         }
 
-        res.status(200).json({ code: 0, message: 'Cart retrieved successfully', data: carts });
+        const cartData = carts.map(item => ({
+            _id: item._id,
+            customerId: item.customerId,
+            productId: item.productId._id,
+            productName: item.productId.name,
+            url_image: item.productId.url_image,
+            price: item.price,
+            quantity: item.quantity,
+            totalPrice: item.totalPrice
+        }));
+
+        res.status(200).json({ code: 0, message: 'Cart retrieved successfully', data: cartData });
     }
     catch (error) {
         res.status(500).json({ code: 2, message: 'Error fetching cart', error: error.message });

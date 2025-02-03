@@ -164,24 +164,28 @@ module.exports.applyDiscount = async (req, res) => {
             return res.status(400).json({ code: 4, message: 'Discount code is not valid at this time' });
         }
 
-        let discountedPrice = price;
+        let paymentPrice = price;
+        let discountPrice = 0;
 
         if (discount.type === 'percentage') {
             // Giảm giá theo phần trăm
-            discountedPrice = price - (price * discount.value / 100);
+            discountPrice = (price * discount.value / 100);
         } else if (discount.type === 'fixed') {
             // Giảm giá theo số tiền cố định
-            discountedPrice = price - discount.value;
+            discountPrice = discount.value;
         }
 
+        paymentPrice = price - discountPrice;
+
         // Đảm bảo giá không âm
-        discountedPrice = Math.max(0, discountedPrice);
+        paymentPrice = Math.max(0, paymentPrice);
 
         res.status(200).json({
             code: 0,
             message: 'Discount applied successfully',
             originalPrice: price,
-            discountedPrice,
+            discountPrice,
+            paymentPrice,
         });
     } catch (error) {
         res.status(500).json({ code: 5, message: 'Error calculating discount', error: error.message });
