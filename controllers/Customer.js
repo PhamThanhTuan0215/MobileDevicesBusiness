@@ -28,14 +28,8 @@ module.exports.addNewCustomer = async (req, res) => {
     if (!email) {
         errors.push('Email is required');
     }
-    if (!phone) {
-        errors.push('Phone is required');
-    }
     if (!password) {
         errors.push('Password is required');
-    }
-    if (!address) {
-        errors.push('Address is required');
     }
 
     if (errors.length > 0) {
