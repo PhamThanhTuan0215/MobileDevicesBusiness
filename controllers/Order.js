@@ -41,6 +41,14 @@ module.exports.add_order = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Customer not found.' });
         }
 
+        if(!customer.address) {
+            return res.status(400).json({ code: 1, message: 'Please update your address in profile.' });
+        }
+
+        if(!customer.phone) {
+            return res.status(400).json({ code: 1, message: 'Please update your phone in profile.' });
+        }
+
         const cartItems = await Cart.find({ customerId }).populate('productId', 'amount name');
 
         // cartItems.productId lúc này lưu thông tin về product(amount, name) chứ ko còn là productId nữa

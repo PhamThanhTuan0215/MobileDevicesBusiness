@@ -1,4 +1,5 @@
 const Discount = require('../models/Discount');
+const Order = require('../models/Order');
 
 module.exports.getAllDiscounts = async (req, res) => {
 
@@ -140,7 +141,7 @@ module.exports.deleteDiscountByID = async (req, res) => {
 }
 
 module.exports.applyDiscount = async (req, res) => {
-    const { code, price } = req.body;
+    const { code, price, customerId } = req.body;
 
     // Kiểm tra giá trị đầu vào
     if (!code) {
@@ -155,6 +156,16 @@ module.exports.applyDiscount = async (req, res) => {
 
         if (!discount) {
             return res.status(404).json({ code: 3, message: 'Discount code not found' });
+        }
+
+        const existingOrder = await Order.findOne({
+            discountCode: code,
+            customerId: customerId,
+            status: { $ne: "cancel" },
+        });
+
+        if (existingOrder) {
+            return res.status(400).json({ code: 7, message: 'You have already used this discount code' });
         }
 
         const currentDate = new Date();

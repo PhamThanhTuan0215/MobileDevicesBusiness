@@ -6,17 +6,24 @@ module.exports.get_list_review = async (req, res) => {
 
     try {
         const reviews = await Review.find({ productId })
+            .populate('customerId', 'name')
 
         if (!reviews || reviews.length === 0) {
             return res.status(200).json({ code: 0, message: 'List review is empty', data: [] });
         }
 
-        res.status(200).json({ code: 0, message: 'List review retrieved successfully', data: reviews });
+        const reviewsWithCustomerName = reviews.map(review => ({
+            ...review.toObject(),
+            customerName: review.customerId.name,
+            customerId: review.customerId._id,
+        }));
+
+        res.status(200).json({ code: 0, message: 'List review retrieved successfully', data: reviewsWithCustomerName });
     }
     catch (error) {
         res.status(500).json({ code: 2, message: 'Error fetching list review', error: error.message });
     }
-}
+};
 
 module.exports.write_review = async (req, res) => {
     const { customerId, productId } = req.params;
@@ -74,6 +81,25 @@ module.exports.delete_review = async (req, res) => {
 
         if (review.customerId.toString() !== customerId) {
             return res.status(403).json({ code: 1, message: 'Customer not authorized to delete this review' });
+        }
+
+        await Review.findOneAndDelete({ _id: reviewId });
+
+        res.status(200).json({ code: 0, message: 'Review deleted successfully.' });
+    }
+    catch (error) {
+        res.status(500).json({ code: 2, message: 'Error deleting review.', error: error.message });
+    }
+}
+
+module.exports.delete_review_by_manager = async (req, res) => {
+    const { reviewId } = req.params;
+
+    try {
+        const review = await Review.findById(reviewId);
+
+        if (!review) {
+            return res.status(404).json({ code: 1, message: 'Review not found' });
         }
 
         await Review.findOneAndDelete({ _id: reviewId });
