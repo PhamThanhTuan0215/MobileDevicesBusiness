@@ -1,7 +1,8 @@
 const crypto = require("crypto");
-const querystring = require("querystring");
+const querystring = require("qs");
 const moment = require("moment");
-const { Order } = require("../models/Order");
+const Order = require('../models/Order')
+require("dotenv").config();
 
 
 module.exports.VNPay = (req, res, next) => {
@@ -22,7 +23,7 @@ module.exports.VNPay = (req, res, next) => {
     let tmnCode = "EXNLMNRI";
     let secretKey = "VSYN4JDWTCS3N7MLKSOMI7MCUHBSSARK";
     let vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    let returnUrl = "http://localhost:9999/booking/vnpay_return";
+    let returnUrl = "http://localhost:9000/payments/vnpay_return";
     // let orderId = moment(date).format("DDHHmmss");
 
 
@@ -50,10 +51,18 @@ module.exports.VNPay = (req, res, next) => {
 
     vnp_Params = sortObject(vnp_Params);
 
+    for (let key in vnp_Params) {
+        if (typeof vnp_Params[key] === "object") {
+            console.log(`Lỗi: Key "${key}" có giá trị là object:`, vnp_Params[key]);
+        }
+    }
+
+
     let signData = querystring.stringify(vnp_Params, { encode: false });
     let hmac = crypto.createHmac("sha512", secretKey);
     let signed = hmac.update(new Buffer(signData, "utf-8")).digest("hex");
     vnp_Params["vnp_SecureHash"] = signed;
+    
     vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
 
     res.json({ url: vnpUrl });
@@ -80,16 +89,26 @@ module.exports.VNPayReturn = async (req, res, next) => {
         if (secureHash === signed) {
             let code = vnp_Params["vnp_ResponseCode"];
             if (code === "00") {
-                let orderId = vnp_Params["vnp_TxnRef"];
-                await Order.findByIdAndUpdate(orderId, {
-                    method: "vnpay",
-                    isPaid: true
-                });
-                return res.status(200).json({
-                    code: 0,
-                    success: true,
-                    message: "Payment successful and order updated."
-                });
+                let orderId = String(vnp_Params["vnp_TxnRef"]);
+                
+                const order = await Order.findByIdAndUpdate(
+                    orderId, 
+                    {
+                        method: "vnpay",  // Cập nhật phương thức thanh toán
+                        isPaid: true      // Cập nhật trạng thái thanh toán thành "đã thanh toán"
+                    },
+                    { new: true }  // Trả về tài liệu đã được cập nhật
+                );
+                if (!order) {
+                    return res.status(404).json({
+                        code: 1,
+                        success: false,
+                        message: "Order not found."
+                    });
+                }
+        
+                return res.redirect("http://localhost:3000/");
+
             } else {
                 return res.status(400).json({
                     code: 1,
