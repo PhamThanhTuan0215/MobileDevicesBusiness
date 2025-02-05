@@ -191,12 +191,27 @@ module.exports.get_details_order = async (req, res) => {
     }
 
     try {
-        const detailsOrder = await DetailsOrder.find({ orderId: id });
+        const detailsOrder = await DetailsOrder.find({ orderId: id }).populate({
+            path: "productId",
+            select: "url_image"
+        });
+
+        const detailsOrderData = detailsOrder.map(item => ({
+            _id: item._id,
+            orderId: item.orderId,
+            productId: item.productId._id,
+            url_image: item.productId.url_image,
+            productName: item.productName,
+            price: item.price,
+            quantity: item.quantity,
+            totalPrice: item.totalPrice
+        }));
+
         if (!detailsOrder || detailsOrder.length === 0) {
             return res.status(404).json({ code: 1, message: 'No details found for this order' });
         }
 
-        res.status(200).json({ code: 0, message: 'Details retrieved successfully', data: detailsOrder });
+        res.status(200).json({ code: 0, message: 'Details retrieved successfully', data: detailsOrderData });
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error retrieving order details', error: error.message });
     }

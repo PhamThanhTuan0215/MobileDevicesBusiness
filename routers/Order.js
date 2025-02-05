@@ -8,14 +8,14 @@ Router.get('/', authenticateToken(['admin', 'manager']), Controller.get_all_orde
 
 Router.get('/my-orders/:customerId', authenticateToken(['customer']), Controller.get_my_orders);
 
-Router.get('/:id', authenticateToken(['customer']), Controller.get_order);
+Router.get('/:id', authenticateToken(['customer', 'admin', 'manager']), Controller.get_order);
 
-Router.get('/details/:id', authenticateToken(['customer']), Controller.get_details_order);
+Router.get('/details/:id', authenticateToken(['customer', 'admin', 'manager']), Controller.get_details_order);
 
 Router.post('/add/:customerId', authenticateToken(['customer']), Controller.add_order);
 
 Router.put('/change-status-order/:id', authenticateToken(['admin', 'manager']), Controller.change_status_order);
 
-Router.delete('/cancel/:id', authenticateToken(['customer']), Controller.cancel_order);
+Router.delete('/cancel/:id', authenticateToken(['customer', 'admin', 'manager']), Controller.cancel_order);
 
 module.exports = Router
