@@ -3,6 +3,7 @@ const cloudinary = require('../configs/CloudinaryConfig');
 const mongoose = require('mongoose');
 const Product = require('../models/Product')
 const DetailsProduct = require('../models/DetailsProduct');
+const DetailsOrder = require('../models/DetailsOrder');
 
 // Cấu hình Multer (lưu trữ ảnh tạm thời trong bộ nhớ)
 const storage = multer.memoryStorage();
@@ -296,6 +297,11 @@ module.exports.delete_product = async (req, res) => {
         const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({ code: 1, message: 'Product not found' });
+        }
+
+        const orderDetails = await DetailsOrder.findOne({ productId: id });
+        if (orderDetails) {
+            return res.status(400).json({ code: 1, message: 'Product is in an order and cannot be deleted' });
         }
 
         const cloudinaryPublicId_old = extractFolderFromURL(product.url_image) + product.url_image.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
