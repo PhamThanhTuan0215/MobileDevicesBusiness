@@ -23,7 +23,7 @@ module.exports.VNPay = (req, res, next) => {
     let tmnCode = "EXNLMNRI";
     let secretKey = "VSYN4JDWTCS3N7MLKSOMI7MCUHBSSARK";
     let vnpUrl = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
-    let returnUrl = "http://localhost:9000/payments/vnpay_return";
+    let returnUrl = process.env.URL_SERVER +  "/payments/vnpay_return";
     // let orderId = moment(date).format("DDHHmmss");
 
 
@@ -107,7 +107,7 @@ module.exports.VNPayReturn = async (req, res, next) => {
                     });
                 }
         
-                return res.redirect("http://localhost:3000/");
+                return res.redirect(process.env.URL_CLIENT);
 
             } else {
                 return res.status(400).json({
