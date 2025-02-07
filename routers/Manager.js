@@ -4,15 +4,14 @@ const authenticateToken = require('../middlewares/authenticateToken');
 
 const Controller = require('../controllers/Manager')
 
-Router.post('/', Controller.upload, function (req, res) {
-    Controller.addNewManager
-})
+Router.post('/', authenticateToken(['manager', 'admin']), Controller.upload, Controller.addNewManager
+)
 
 Router.get('/', authenticateToken(['admin']), Controller.getAllManager)
 
-Router.get('/:id', authenticateToken(['admin']), Controller.getManagerById)
+Router.get('/:id', Controller.getManagerById)
 
-Router.patch('/:id', authenticateToken(['admin', 'manager']), Controller.upload , Controller.updateManagerById)
+Router.patch('/:id', Controller.upload , Controller.updateManagerById)
 
 Router.delete('/:id', authenticateToken(['admin']), Controller.deleteManagerByID)
 

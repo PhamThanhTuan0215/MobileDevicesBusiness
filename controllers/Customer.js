@@ -84,7 +84,7 @@ module.exports.getCustomerById = async (req, res) => {
 
 module.exports.updateCustomerById = async (req, res) => {
     const id = req.params.id
-    const {name, email, address, phone} = req.body;
+    const {name, email, address, phone, status} = req.body;
     const file = req.file;
 
     const errors = [];
@@ -100,6 +100,11 @@ module.exports.updateCustomerById = async (req, res) => {
     if (!address) {
         errors.push('Address is required');
     }
+
+    if(!status){
+        status = "active"
+    }
+
     if (errors.length > 0) {
         return res.status(400).json({ code: 1, message: 'Validation failed', errors });
     }
@@ -141,6 +146,7 @@ module.exports.updateCustomerById = async (req, res) => {
         customer.email = email;
         customer.address = address;
         customer.phone = phone;
+        customer.status = status;
         await customer.save({ session });
 
         await session.commitTransaction();
@@ -167,12 +173,12 @@ module.exports.updateCustomerById = async (req, res) => {
 module.exports.deleteCustomerByID = async (req, res) => {
     try {
         const customer = await Customer.findByIdAndDelete(req.params.id);
-        const cloudinaryPublicId_old = extractFolderFromURL(customer.url_avatar) + customer.url_avatar.split('/').pop().split('.')[0];
+        // const cloudinaryPublicId_old = extractFolderFromURL(customer.url_avatar) + customer.url_avatar.split('/').pop().split('.')[0];
         if (!customer) {
             return res.status(404).json({code: 1, message: 'Customer not found'});
         }
 
-        cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        // cloudinary.uploader.destroy(cloudinaryPublicId_old);
 
         res.status(200).json({code: 0, message: 'Customer deleted successfully', data: customer});
     } catch (error) {
@@ -212,7 +218,7 @@ module.exports.login = async (req, res) => {
             role: 'customer'
         };
 
-        jwt.sign(payload, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
+        jwt.sign(payload, JWT_SECRET, { expiresIn: 36000 }, (error, token) => {
             if (error) {
                 throw error;
             }

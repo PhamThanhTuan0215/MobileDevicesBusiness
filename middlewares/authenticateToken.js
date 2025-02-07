@@ -22,7 +22,6 @@ const authenticateToken = (requiredRoles) => {
 
             // Kiểm tra quyền hạn
             if (requiredRoles && !requiredRoles.includes(user.role)) {
-                console.log(user.role)
                 return res.status(403).json({
                     success: false,
                     message: 'You do not have permission to access this resource.'

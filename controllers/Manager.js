@@ -14,7 +14,7 @@ const upload = multer({ storage: storage });
 // Export middleware upload để sử dụng trong router (sử dụng đối với các hàm cần upload ảnh)
 module.exports.upload = upload.single('image'); // Chỉ định tên của file ảnh là "image"
 
-module.exports.addNewAccount = async (req, res) => {
+module.exports.addNewManager = async (req, res) => {
 
     const {name, email,address, phone, role} = req.body;
 
@@ -89,7 +89,7 @@ module.exports.getManagerById = async (req, res) => {
 
 module.exports.updateManagerById = async (req, res) => {
     const id = req.params.id
-    const {name, email, address, phone, role} = req.body;
+    const {name, email, address, phone, role, status} = req.body;
     const file = req.file;
 
     const errors = [];
@@ -147,6 +147,7 @@ module.exports.updateManagerById = async (req, res) => {
         manager.address = address;
         manager.phone = phone;
         manager.role = role;
+        manager.status = status;
         await manager.save({ session });
 
         await session.commitTransaction();
@@ -173,13 +174,13 @@ module.exports.updateManagerById = async (req, res) => {
 module.exports.deleteManagerByID = async (req, res) => {
     try {
         const manager = await Manager.findByIdAndDelete(req.params.id);
-        const cloudinaryPublicId_old = extractFolderFromURL(manager.url_avatar) + manager.url_avatar.split('/').pop().split('.')[0];
+        // const cloudinaryPublicId_old = extractFolderFromURL(manager.url_avatar) + manager.url_avatar.split('/').pop().split('.')[0];
 
         if (!manager) {
             return res.status(404).json({code: 1, message: 'Manager not found'});
         }
 
-        cloudinary.uploader.destroy(cloudinaryPublicId_old);
+        // cloudinary.uploader.destroy(cloudinaryPublicId_old);
         
         res.status(200).json({code: 0, message: 'Manager deleted successfully', data: manager});
     } catch (error) {
@@ -219,7 +220,7 @@ module.exports.login = async (req, res) => {
             role: manager.role
         };
 
-        jwt.sign(payload, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
+        jwt.sign(payload, JWT_SECRET, { expiresIn: 36000 }, (error, token) => {
             if (error) {
                 throw error;
             }
@@ -255,4 +256,27 @@ module.exports.changePassword = async (req, res) => {
     } catch (error) {
         res.status(500).json({code: 2, message: 'Error changing password', error: error.message});
     }
+}
+
+function extractFolderFromURL(url) {
+    // Tách phần sau "upload/" (nếu có)
+    const uploadIndex = url.indexOf('/upload/');
+    if (uploadIndex === -1) return ''; // Không tìm thấy "/upload/", trả về chuỗi rỗng
+
+    // Lấy phần sau "/upload/"
+    const path = url.substring(uploadIndex + 8);
+
+    // Loại bỏ tiền tố "v[digits]/" nếu có
+    const cleanedPath = path.replace(/^v\d+\//, '');
+
+    // Tìm vị trí của dấu "/" cuối cùng
+    const lastSlashIndex = cleanedPath.lastIndexOf('/');
+
+    // Trích xuất toàn bộ path (không có tiền tố "v[digits]/")
+    if (lastSlashIndex !== -1) {
+        return cleanedPath.substring(0, lastSlashIndex + 1);
+    }
+
+    // Nếu không có thư mục
+    return ''; // Trả về chuỗi rỗng
 }
