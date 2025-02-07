@@ -39,7 +39,7 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const LINK = "http://localhost:" + PORT;
+const LINK = process.env.URL_SERVER || "http://localhost:" + PORT;
 const { MONGODB_URI, DB_NAME } = process.env;
 mongoose
     .connect(MONGODB_URI, {
