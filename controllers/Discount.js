@@ -24,9 +24,7 @@ module.exports.addNewDiscount = async (req, res) => {
     if (!value) {
         errors.push('Value is required');
     }
-    if (!start_date) {
-        errors.push('Start date is required');
-    }
+    
     if (!end_date) {
         errors.push('End date is required');
     }
