@@ -41,11 +41,11 @@ module.exports.add_order = async (req, res) => {
             return res.status(404).json({ code: 1, message: 'Customer not found.' });
         }
 
-        if(!customer.address) {
+        if (!customer.address) {
             return res.status(400).json({ code: 1, message: 'Please update your address in profile.' });
         }
 
-        if(!customer.phone) {
+        if (!customer.phone) {
             return res.status(400).json({ code: 1, message: 'Please update your phone in profile.' });
         }
 
@@ -150,10 +150,18 @@ module.exports.get_all_order = async (req, res) => {
             };
         }
 
-        const orders = await Order.find(filter).sort({ isCompleted: 1, creation_date: -1 });
+        const orders = await Order.aggregate([
+            { $match: filter },
+            { 
+                $addFields: { 
+                    statusSort: { $cond: { if: { $eq: ["$status", "canceled"] }, then: 1, else: 0 } }
+                }
+            },
+            { $sort: { statusSort: 1, isCompleted: 1, creation_date: -1 } }
+        ]);
 
         if (!orders || orders.length === 0) {
-            return res.status(404).json({ code: 1, message: 'No orders found.' });
+            return res.status(200).json({ code: 0, message: 'Orders retrieved successfully.', data: [] });
         }
 
         res.status(200).json({

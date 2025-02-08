@@ -30,12 +30,12 @@ module.exports.get_report_orders = async (req, res) => {
         const orders = await Order.find(filter).sort({ isCompleted: 1, creation_date: -1 });
 
         if (!orders || orders.length === 0) {
-            return res.status(404).json({ code: 1, message: 'No orders found.' });
+            return res.status(200).json({ code: 0, message: 'Orders retrieved successfully.', data: [] });
         }
 
         const reportOrders = await Promise.all(
             orders.map(async (order) => {
-                const details = await DetailsOrder.find({ orderId: order._id }).populate('productId', 'retail_price import_price'); // biến trường productId thành nơi lưu Product(chỉ chứa giá trị retail_price và import_price)
+                const details = await DetailsOrder.find({ orderId: order._id }).populate('productId', 'retail_price import_price'); // biến trường productId thành nơi lưu Product(chỉ chứa giá trị url_image, retail_price và import_price)
                 let totalImportPrice = 0;
 
                 for (const detail of details) {
@@ -44,7 +44,7 @@ module.exports.get_report_orders = async (req, res) => {
                 }
 
                 const profit = order.paymentPrice - totalImportPrice;
-                const profitMargin = totalImportPrice > 0 ? ((profit / totalImportPrice) * 100).toFixed(2) : 0;
+                const profitMargin = order.paymentPrice > 0 ? ((profit / order.paymentPrice) * 100).toFixed(2) : 0;
 
                 return {
                     ...order.toObject(),
@@ -85,7 +85,7 @@ module.exports.get_report_order = async (req, res) => {
         }
 
         const profit = order.paymentPrice - totalImportPrice;
-        const profitMargin = totalImportPrice > 0 ? ((profit / totalImportPrice) * 100).toFixed(2) : 0;
+        const profitMargin = order.paymentPrice > 0 ? ((profit / order.paymentPrice) * 100).toFixed(2) : 0;
 
         const enrichedOrder = {
             ...order.toObject(),
@@ -108,7 +108,7 @@ module.exports.get_report_details_order = async (req, res) => {
     }
 
     try {
-        const detailsOrder = await DetailsOrder.find({ orderId: id }).populate('productId', 'retail_price import_price');
+        const detailsOrder = await DetailsOrder.find({ orderId: id }).populate('productId', 'url_image retail_price import_price');
         if (!detailsOrder || detailsOrder.length === 0) {
             return res.status(404).json({ code: 1, message: 'No details found for this order' });
         }
@@ -120,6 +120,7 @@ module.exports.get_report_details_order = async (req, res) => {
             const importPrice = product.import_price;
             const retailPrice = product.retail_price;
             const quantity = detail.quantity;
+            const url_image = product.url_image
 
             const totalImportPrice = importPrice * quantity;
             const profit = (retailPrice - importPrice) * quantity;
@@ -128,6 +129,7 @@ module.exports.get_report_details_order = async (req, res) => {
                 ...detail.toObject(),
                 productId,
                 product,
+                url_image,
                 importPrice,
                 totalImportPrice,
                 profit
@@ -167,7 +169,7 @@ module.exports.get_report_products = async (req, res) => {
             .populate('productId', 'name retail_price import_price amount url_image');
 
         if (!purchasedProducts || purchasedProducts.length === 0) {
-            return res.status(404).json({ code: 1, message: 'No purchased products found.' });
+            return res.status(200).json({ code: 0, message: 'Product report retrieved successfully.', data: [] });
         }
 
         const productStats = {};
@@ -202,8 +204,8 @@ module.exports.get_report_products = async (req, res) => {
             productStats[productId].totalPrice += totalPrice;
             productStats[productId].totalImportPrice += totalImportPrice;
             productStats[productId].profit += profit;
-            productStats[productId].profitMargin = (productStats[productId].totalImportPrice > 0) ? 
-                ((productStats[productId].profit / productStats[productId].totalImportPrice) * 100).toFixed(2) : 0;
+            productStats[productId].profitMargin = (productStats[productId].totalPrice > 0) ? 
+                ((productStats[productId].profit / productStats[productId].totalPrice) * 100).toFixed(2) : 0;
         });
 
         const reportProducts = Object.values(productStats);
