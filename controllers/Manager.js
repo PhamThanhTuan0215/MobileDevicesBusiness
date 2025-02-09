@@ -213,6 +213,10 @@ module.exports.login = async (req, res) => {
             return res.status(400).json({code: 1, message: 'Invalid credentials'});
         }
 
+        if (manager.status !== 'active') {
+            return res.status(403).json({code: 1, message: 'Account is inactive or locked'});
+        }
+
         const payload = {
             manager: {
                 id: manager.id,
