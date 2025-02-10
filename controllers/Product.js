@@ -13,28 +13,121 @@ const upload = multer({ storage: storage });
 module.exports.upload = upload.single('image'); // Chỉ định tên của file ảnh là "image"
 
 module.exports.get_all_products = async (req, res) => {
+    const { productNameSearch, brand, sortPrice, page } = req.query
+
+    let filter = {};
+    let sort = {};
+    let limit = null;
+    let skip = 0;
+    let isFiltered = false;
+
+    if (productNameSearch !== undefined) {
+        if (productNameSearch !== "") {
+            filter.name = { $regex: productNameSearch, $options: 'i' }
+            isFiltered = true;
+        }
+    }
+    if (brand !== undefined) {
+        if (brand !== "All") {
+            filter.brand = brand;
+            isFiltered = true;
+        }
+    }
+    if (sortPrice !== undefined) {
+        if (sortPrice === "asc") {
+            sort.retail_price = 1;
+        }
+        else if (sortPrice === "desc") {
+            sort.retail_price = -1;
+        }
+    }
+    if (page !== undefined && page > 0) {
+        limit = 5;
+        skip = (page - 1) * limit;
+    }
+
     try {
-        const products = await Product.find();
+        const totalLength = isFiltered ? await Product.countDocuments(filter) : await Product.countDocuments();
+
+        let query = Product.find(filter).sort(sort);
+        if (limit !== null) {
+            query = query.skip(skip).limit(limit);
+        }
+
+        const products = await query;
+
         if (!products) {
             return res.status(404).json({ code: 1, message: 'Products not found' });
         }
-        res.status(200).json({ code: 0, message: 'Products found', data: products });
+        res.status(200).json({ code: 0, message: 'Products found', totalLength, data: products });
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error fetching all products', error: error.message });
     }
 };
 
 module.exports.get_products_for_customer = async (req, res) => {
+
+    const { productNameSearch, brand, sortPrice, page } = req.query
+
+    let filter = {};
+    let sort = {};
+    let limit = null;
+    let skip = 0;
+    let isFiltered = false;
+
+    if (productNameSearch !== undefined) {
+        if (productNameSearch !== "") {
+            filter.name = { $regex: productNameSearch, $options: 'i' }
+            isFiltered = true;
+        }
+    }
+    if (brand !== undefined) {
+        if (brand !== "All") {
+            filter.brand = brand;
+            isFiltered = true;
+        }
+    }
+    if (sortPrice !== undefined) {
+        if (sortPrice === "asc") {
+            sort.retail_price = 1;
+        }
+        else if (sortPrice === "desc") {
+            sort.retail_price = -1;
+        }
+    }
+    if (page !== undefined && page > 0) {
+        limit = 10;
+        skip = (page - 1) * limit;
+    }
+
     try {
-        const products = await Product.find().select('-import_price');
+        const totalLength = isFiltered ? await Product.countDocuments(filter) : await Product.countDocuments();
+
+        let query = Product.find(filter).select('-import_price').sort(sort);
+        if (limit !== null) {
+            query = query.skip(skip).limit(limit);
+        }
+
+        const products = await query;
+
         if (!products) {
             return res.status(404).json({ code: 1, message: 'Products not found' });
         }
-        res.status(200).json({ code: 0, message: 'Products found', data: products });
+        res.status(200).json({ code: 0, message: 'Products found', totalLength, data: products });
     } catch (error) {
         res.status(500).json({ code: 2, message: 'Error fetching all products', error: error.message });
     }
 };
+
+module.exports.get_all_brands = async (req, res) => {
+    try {
+        const brands = await Product.distinct("brand");
+        res.status(200).json({ code: 0, message: "Brands fetched", data: ["All", ...brands] });
+    } catch (error) {
+        res.status(500).json({ code: 2, message: "Error fetching brands", error: error.message });
+    }
+};
+
 
 module.exports.get_product = async (req, res) => {
     const { id } = req.params;
@@ -307,7 +400,7 @@ module.exports.delete_product = async (req, res) => {
         const cloudinaryPublicId_old = extractFolderFromURL(product.url_image) + product.url_image.split('/').pop().split('.')[0]; // Lưu lại public_id cũ
 
         await Product.findByIdAndDelete(id);
-        await DetailsProduct.findOneAndDelete({productId: id})
+        await DetailsProduct.findOneAndDelete({ productId: id })
         cloudinary.uploader.destroy(cloudinaryPublicId_old);
 
         res.status(200).json({ code: 0, message: 'Product deleted successfully' });
@@ -324,7 +417,7 @@ module.exports.search_by_name = async (req, res) => {
         return res.status(400).json({ code: 1, message: 'Name query parameter is required' });
     }
 
-    try {    
+    try {
         const products = await Product.find({
             name: { $regex: name, $options: 'i' } //không phân biệt hoa thường
         });
@@ -346,7 +439,7 @@ module.exports.filter_products = async (req, res) => {
         return res.status(400).json({ code: 1, message: 'Brand query parameter is required' });
     }
 
-    try {    
+    try {
         const products = await Product.find({
             brand: { $regex: `^${brand}$`, $options: 'i' }
         });

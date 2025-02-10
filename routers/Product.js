@@ -8,6 +8,8 @@ Router.get('/', authenticateToken(['admin', 'manager']), Controller.get_all_prod
 
 Router.get('/display', Controller.get_products_for_customer);
 
+Router.get('/brands', Controller.get_all_brands);
+
 Router.get('/search', Controller.search_by_name);
 
 Router.get('/filter', Controller.filter_products);
